@@ -1,4 +1,4 @@
-import {Box, Button, Center, Heading, HStack, Link, Switch, Text, useColorMode, VStack} from "native-base";
+import {Box, Button, Center, Heading, HStack, Link, Switch, Text, useColorMode, VStack, useToast} from "native-base";
 import {Input} from "@components";
 import React, {useRef, useState} from "react";
 import {useForm} from "react-hook-form";
@@ -24,12 +24,12 @@ function ToggleDarkMode() {
 
 function ToggleLang() {
     const {i18n} = useTranslation();
-    const [lang,setLang] = useState(true);
+    const [lang, setLang] = useState(true);
 
-    const switchfn =() =>{
-        if(lang){
+    const switchfn = () => {
+        if (lang) {
             i18n.changeLanguage('es')
-        }else{
+        } else {
             i18n.changeLanguage('en')
         }
         setLang(!lang);
@@ -49,8 +49,9 @@ function ToggleLang() {
 export default function Main() {
     const validation = useForm({mode: "all"});
     const {t} = useTranslation();
+    const toast = useToast();
 
-    const {handleSubmit} = validation;
+    const {handleSubmit, formState} = validation;
     const [formulario, setFormulario] = useState({});
     const ref_input1 = useRef();
     const ref_input2 = useRef();
@@ -60,6 +61,11 @@ export default function Main() {
 
     const submit = (formulario) => {
         console.log("submit", formulario);
+    }
+
+    const errores = (errors) => {
+        console.log("errores", errors);
+        toast.show({title:'Error',description: t('alerts.form')});
     }
 
     return (
@@ -116,23 +122,24 @@ export default function Main() {
                         refChil={ref_input2}
                     />
                     <Input
-                        name="sobrenombre"
+                        name="nick"
                         label={t("fields.nickname")}
                         value={formulario}
                         setValue={setFormulario}
                         rules={{pattern: /[A-Za-z]{10}/}}
                         validation={validation}
+                        returnKeyType="next"
                         placeholder={t("placeholders.nickname")}
                         w="100%"
                         refChil={ref_input3}
-                        onSubmitEditing={handleSubmit(submit)}
+                        onSubmitEditing={() => ref_input4.current.focus()}
                     />
                     <Input
                         name="dni"
                         label={t("fields.dni")}
                         value={formulario}
                         setValue={setFormulario}
-                        rules={{required: true,validate: value => F.ciValidation(value)}}
+                        rules={{required: true, validate: value => F.ciValidation(value)}}
                         validation={validation}
                         placeholder={t("placeholders.dni")}
                         w="100%"
@@ -140,7 +147,8 @@ export default function Main() {
                         onSubmitEditing={handleSubmit(submit)}
                     />
                     <VStack space={2} alignItems="center">
-                        <Button size="md" onPress={handleSubmit(submit)} ref={ref_input5}>{t("btns.send")}</Button>
+                        <Button size="md" onPress={handleSubmit(submit, errores)}
+                                ref={ref_input5}>{t("btns.send")}</Button>
                     </VStack>
                 </Box>
             </Box>

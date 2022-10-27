@@ -21,5 +21,8 @@
     "required": "The {{label}} field is required.",
     "pattern": "The {{label}} field does not meet the pattern.",
     "validation": "The {{label}} field is invalid."
+  },
+  "alerts": {
+    "form": "Complete the form"
   }
 }

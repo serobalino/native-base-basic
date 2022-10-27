@@ -21,5 +21,8 @@
     "required": "El campo {{label}} es obligatorio.",
     "pattern": "El campo {{label}} no cumple el patrón.",
     "validation": "El campo {{label}} no es válido."
+  },
+  "alerts": {
+    "form": "Completa el formulario"
   }
 }
