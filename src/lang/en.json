@@ -1,0 +1,25 @@
+{
+  "base": {
+    "title": "Hello this is a title"
+  },
+  "btns": {
+    "send": "Send"
+  },
+  "placeholders": {
+    "firstname": "Jhon",
+    "lastname": "Doe",
+    "nickname": "Stonehof12",
+    "dni": "17XXXXXXX0"
+  },
+  "fields": {
+    "firstname": "Firstname",
+    "lastname": "Lastname",
+    "nickname": "Nickname",
+    "dni": "ID"
+  },
+  "validation": {
+    "required": "The {{label}} field is required.",
+    "pattern": "The {{label}} field does not meet the pattern.",
+    "validation": "The {{label}} field is invalid."
+  }
+}

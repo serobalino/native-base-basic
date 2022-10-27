@@ -1,0 +1,25 @@
+{
+  "base": {
+    "title": "Hola esto es un titulo"
+  },
+  "btns": {
+    "send": "Enviar"
+  },
+  "placeholders": {
+    "firstname": "Carlos",
+    "lastname": "Sánchez",
+    "nickname": "Carlosanchez",
+    "dni": "17XXXXXXX0"
+  },
+  "fields": {
+    "firstname": "Nombre",
+    "lastname": "Apellido",
+    "nickname": "Sobrenombre",
+    "dni": "Cédula"
+  },
+  "validation": {
+    "required": "El campo {{label}} es obligatorio.",
+    "pattern": "El campo {{label}} no cumple el patrón.",
+    "validation": "El campo {{label}} no es válido."
+  }
+}

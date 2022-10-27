@@ -1,10 +1,8 @@
-import {
-    Input,
-    FormControl, View, Button, Text, Spinner, HStack,
-} from 'native-base';
-import React, {forwardRef, useEffect, useState} from 'react';
+import {Input, FormControl, Spinner} from 'native-base';
+import React, {useEffect, useState} from 'react';
 import PropTypes from 'prop-types';
 import {Controller} from 'react-hook-form';
+import {useTranslation} from "react-i18next";
 
 export default function Index(props) {
     const {
@@ -19,24 +17,11 @@ export default function Index(props) {
         InputRightElement,
         ...rest
     } = props;
+
     const {setValue, control, formState: {errors}} = validation;
+    const {t} = useTranslation();
 
     const [inValue, setInValue] = useState(value[name]);
-    const [isRequired, setisRequired] = useState(false);
-    const [newRules, setNewRules] = useState(() => generateRules);
-
-    const generateRules = () => {
-        let aux = rules;
-        if (aux?.required) {
-            setisRequired(true);
-            aux.required = "El campo " + label + "es obligatorio";
-        }
-        return aux;
-    }
-
-    useEffect(() => {
-        setNewRules(generateRules());
-    }, [rules])
 
     useEffect(() => {
         setValue(name, value[name]);
@@ -55,7 +40,7 @@ export default function Index(props) {
         }
     }
     return (
-        <FormControl isRequired={isRequired} isInvalid={name in errors} isDisabled={disabled || loading} pb={1}>
+        <FormControl isRequired={rules.required} isInvalid={name in errors} isDisabled={disabled || loading} pb={1}>
             <FormControl.Label mb={0}>{label}</FormControl.Label>
             <Controller
                 control={control}
@@ -75,11 +60,11 @@ export default function Index(props) {
                     />
                 )}
                 name={name}
-                rules={newRules}
+                rules={rules}
                 defaultValue={inValue}
             />
             <FormControl.ErrorMessage mt={0}>
-                {errors[name]?.message}
+                {t('validation.'+errors[name]?.type,{label: label.toLowerCase()})}
             </FormControl.ErrorMessage>
         </FormControl>
     );
