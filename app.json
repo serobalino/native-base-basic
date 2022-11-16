@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Native Base Basic",
+    "name": "OBD APP KIA",
     "slug": "native-base-basic",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,13 +17,15 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "test.kia.com"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "package": "test.kia.com"
     },
     "web": {
       "favicon": "./assets/favicon.png"
