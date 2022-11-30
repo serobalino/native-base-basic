@@ -1,157 +1,192 @@
-import {Box, Button, Center, Heading, HStack, Link, Switch, Text, useColorMode, VStack, useToast} from "native-base";
-import {Input} from "@components";
-import React, {useRef, useState} from "react";
-import {useForm} from "react-hook-form";
-import {useTranslation} from "react-i18next";
-import {F} from "./config/util";
-
-function ToggleDarkMode() {
-    const {colorMode, toggleColorMode} = useColorMode();
-    return (
-        <HStack space={2} alignItems="center">
-            <Text>Dark</Text>
-            <Switch
-                isChecked={colorMode === "light"}
-                onToggle={toggleColorMode}
-                aria-label={
-                    colorMode === "light" ? "switch to dark mode" : "switch to light mode"
-                }
-            />
-            <Text>Light</Text>
-        </HStack>
-    );
-}
-
-function ToggleLang() {
-    const {i18n} = useTranslation();
-    const [lang, setLang] = useState(true);
-
-    const switchfn = () => {
-        if (lang) {
-            i18n.changeLanguage('es')
-        } else {
-            i18n.changeLanguage('en')
-        }
-        setLang(!lang);
-    }
-    return (
-        <HStack space={2} alignItems="center">
-            <Text>ES</Text>
-            <Switch
-                isChecked={lang}
-                onToggle={switchfn}
-            />
-            <Text>EN</Text>
-        </HStack>
-    );
-}
+import {
+  Box,
+  Button,
+  Center,
+  Heading,
+  HStack,
+  Link,
+  Pressable,
+  Text,
+  useColorMode,
+  VStack,
+  useToast, ScrollView, Stack, View,
+} from 'native-base';
+import React, { useEffect, useRef, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { FlatList, SafeAreaView } from 'react-native';
+import { conectTo, isConected, read, startScanner, stopScanner } from './plugins/bt';
 
 export default function Main() {
-    const validation = useForm({mode: "all"});
-    const {t} = useTranslation();
-    const toast = useToast();
+  const validation = useForm({ mode: 'all' });
+  const { t } = useTranslation();
+  const toast = useToast();
 
-    const {handleSubmit, formState} = validation;
-    const [formulario, setFormulario] = useState({});
-    const ref_input1 = useRef();
-    const ref_input2 = useRef();
-    const ref_input3 = useRef();
-    const ref_input4 = useRef();
-    const ref_input5 = useRef();
+  const { handleSubmit, formState } = validation;
+  const [list, setList] = useState([]);
+  const [servicios, setServicios] = useState([]);
+  const [caracteristicas, setCarasteristicas] = useState([]);
+  const [dev, setDev] = useState({});
+  const [service, setService] = useState({});
+  const [search, setSearch] = useState(false);
 
-    const submit = (formulario) => {
-        console.log("submit", formulario);
+  const loadBts = () => {
+    setSearch(true);
+    if(dev.id){
+      isConected(dev.id).then(a=>{
+        console.log('esta conectado');
+        setSearch(false);
+      }).catch(()=>{
+        setDev({});
+        startScanner(setList, setSearch);
+      })
+    }else {
+      startScanner(setList, setSearch);
     }
+  };
 
-    const errores = (errors) => {
-        console.log("errores", errors);
-        toast.show({title:'Error',description: t('alerts.form')});
+  const errorBt = (a) => {
+    console.error(a)
+  }
+
+  const readDevice = () => {
+    if(dev.id){
+      dev.discoverAllServicesAndCharacteristics().then(a=>{
+        console.log('all',JSON.stringify(a,null,2))
+      }).catch((e)=>{
+        console.log(e)
+      })
+    }else {
+      console.log("Error no existe device")
     }
+  }
 
-    return (
-        <Center
-            _dark={{bg: "blueGray.900"}}
-            _light={{bg: "blueGray.50"}}
-            px={4}
-            flex={1}
-        >
-            <VStack space={5} alignItems="center">
-                <Heading size="lg">Welcome to NativeBase</Heading>
-                <HStack space={2} alignItems="center">
-                    <Text>Edit</Text>
-                    <Box px={2} py={1}>
-                        App.js
-                    </Box>
-                    <Text>and save to reload.</Text>
-                </HStack>
-                <ToggleLang/>
+  const cancelar = () => {
+    setSearch(false);
+    stopScanner();
+  };
 
-                <Link href="https://docs.nativebase.io" isExternal>
-                    <Text color="primary.500" underline fontSize={"xl"}>
-                        {t("base.title")}
-                    </Text>
-                </Link>
-                <ToggleDarkMode/>
-            </VStack>
-            <Box alignItems="center">
-                <Box w="100%" maxWidth="300px" alignItems="center">
-                    <Input
-                        name="nombre"
-                        label={t("fields.firstname")}
-                        value={formulario}
-                        setValue={setFormulario}
-                        rules={{required: true}}
-                        validation={validation}
-                        returnKeyType="next"
-                        onSubmitEditing={() => ref_input2.current.focus()}
-                        placeholder={t("placeholders.firstname")}
-                        w="100%"
-                        refChil={ref_input1}
-                    />
-                    <Input
-                        name="apellido"
-                        label={t("fields.lastname")}
-                        value={formulario}
-                        setValue={setFormulario}
-                        rules={{required: true}}
-                        validation={validation}
-                        returnKeyType="next"
-                        onSubmitEditing={() => ref_input3.current.focus()}
-                        placeholder={t("placeholders.lastname")}
-                        w="100%"
-                        refChil={ref_input2}
-                    />
-                    <Input
-                        name="nick"
-                        label={t("fields.nickname")}
-                        value={formulario}
-                        setValue={setFormulario}
-                        rules={{pattern: /[A-Za-z]{10}/}}
-                        validation={validation}
-                        returnKeyType="next"
-                        placeholder={t("placeholders.nickname")}
-                        w="100%"
-                        refChil={ref_input3}
-                        onSubmitEditing={() => ref_input4.current.focus()}
-                    />
-                    <Input
-                        name="dni"
-                        label={t("fields.dni")}
-                        value={formulario}
-                        setValue={setFormulario}
-                        rules={{required: true, validate: value => F.ciValidation(value)}}
-                        validation={validation}
-                        placeholder={t("placeholders.dni")}
-                        w="100%"
-                        refChil={ref_input4}
-                        onSubmitEditing={handleSubmit(submit)}
-                    />
-                    <VStack space={2} alignItems="center">
-                        <Button size="md" onPress={handleSubmit(submit, errores)}
-                                ref={ref_input5}>{t("btns.send")}</Button>
-                    </VStack>
-                </Box>
-            </Box>
+  useEffect(()=>{
+    //
+  },[])
+
+  const pushService = (service) =>{
+    console.log('touch servicio:',service.uuid);
+    setService(service);
+    setCarasteristicas([]);
+    dev.characteristicsForService(service.uuid).then(a=>{
+      console.log('caracteristicas de ',service.uuid,a.length);
+      setCarasteristicas(a);
+    }).catch((e)=>{
+      console.log('error caracteristicas de ',service.uuid,e);
+    })
+  }
+
+  const pushItem = (item) => {
+    console.log('touch:',item.id);
+    conectTo(item).then(a=>{
+      setDev(item);
+      setServicios([]);
+      console.log('exito en touch');
+      item.services().then((a)=>{
+        setServicios(a);
+        console.log('servicios de ',item.id, a.length);
+      }).catch((b)=>{
+        console.log('error servicios de ',item.id, b);
+      })
+    }).catch(e=>{
+      console.log('error en touch',e);
+    })
+  };
+
+  return (
+    <SafeAreaView pt={10} pb={10}>
+      <Heading size='lg'>Welcome to OBD</Heading>
+      <VStack w="100%" space={4} px="2" mt="4" alignItems="center" justifyContent="center">
+        <Stack mb="2.5" mt="1.5" direction={{
+          base: "row",
+          md: "row"
+        }} space={2} mx={{
+          base: "auto",
+          md: "0"
+        }}>
+          <Button size='md' onPress={loadBts} isLoading={search}>{t('btns.search')}</Button>
+          <Button size='md' onPress={cancelar}>{t('btns.cancelar')}</Button>
+          <Button size='md' onPress={readDevice} isDisabled={!dev?.id}>{t('btns.read')}</Button>
+        </Stack>
+      </VStack>
+      <ScrollView nestedScrollEnabled={true}>
+        <Center mt="3" mb="4">
+          <Heading fontSize="xl">Bluetooth</Heading>
         </Center>
-    )
+        <FlatList data={list} renderItem={({ item }) =>
+          <Box pl={['1', '1']} pr={['0', '5']} py='2'>
+            <Pressable onPress={() => pushItem(item)} isDisabled={search} maxW='96' shadow='3' bg={dev?.id===item.id ? 'red.200' : 'coolGray.100'} p='1'>
+              <HStack space={[2, 3]} justifyContent='space-between'>
+                <VStack>
+                  <Text _dark={{
+                    color: 'warmGray.50',
+                  }} color='coolGray.800' bold>
+                    {item.id}
+                  </Text>
+                  <Text color='coolGray.600' _dark={{
+                    color: 'warmGray.200',
+                  }}>
+                    {item.localName}
+                  </Text>
+                </VStack>
+              </HStack>
+            </Pressable>
+          </Box>
+        } keyExtractor={(item) => item.id} />
+        <Center mt="3" mb="4">
+          <Heading fontSize="xl">Services</Heading>
+        </Center>
+        <FlatList data={servicios} renderItem={({ item }) =>
+          <Box pl={['1', '1']} pr={['0', '5']} py='2'>
+            <Pressable onPress={() => pushService(item)} isDisabled={search} maxW='96' shadow='3' bg={service?.uuid===item.uuid ? 'red.200' : 'coolGray.100'} p='1'>
+              <HStack space={[2, 3]} justifyContent='space-between'>
+                <VStack>
+                  <Text _dark={{
+                    color: 'warmGray.50',
+                  }} color='coolGray.800' bold>
+                    {item.id}
+                  </Text>
+                  <Text color='coolGray.600' _dark={{
+                    color: 'warmGray.200',
+                  }}>
+                    {item.uuid}
+                  </Text>
+                </VStack>
+              </HStack>
+            </Pressable>
+          </Box>
+        } keyExtractor={(item) => item.uuid} />
+        <Center mt="3" mb="4">
+          <Heading fontSize="xl">Characteristics</Heading>
+        </Center>
+        <FlatList data={caracteristicas} renderItem={({ item }) =>
+          <Box pl={['1', '1']} pr={['0', '5']} py='2'>
+            <Pressable onPress={null} isDisabled={search} maxW='96' shadow='3' bg='coolGray.100' p='1'>
+              <HStack space={[2, 3]} justifyContent='space-between'>
+                <VStack>
+                  <Text _dark={{
+                    color: 'warmGray.50',
+                  }} color='coolGray.800' bold>
+                    {item.id}
+                  </Text>
+                  <Text color='coolGray.600' _dark={{
+                    color: 'warmGray.200',
+                  }}>
+                    {item.uuid}
+                  </Text>
+                </VStack>
+              </HStack>
+            </Pressable>
+          </Box>
+        } keyExtractor={(item) => item.id} />
+      </ScrollView>
+      <Box py={20}></Box>
+    </SafeAreaView>
+  );
 }
