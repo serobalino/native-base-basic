@@ -34,6 +34,7 @@ PODS:
   - fmt (6.2.1)
   - glog (0.3.5)
   - MultiplatformBleAdapter (0.1.9)
+  - RaxelPulse (5.16)
   - RCT-Folly (2021.07.22.00):
     - boost
     - DoubleConversion
@@ -254,6 +255,9 @@ PODS:
     - RCTTypeSafety
     - React-Core
     - ReactCommon/turbomodule/core
+  - react-native-telematics-sdk (1.0.4):
+    - RaxelPulse
+    - React-Core
   - React-perflogger (0.70.5)
   - React-RCTActionSheet (0.70.5):
     - React-Core/RCTActionSheetHeaders (= 0.70.5)
@@ -358,6 +362,7 @@ DEPENDENCIES:
   - react-native-ble-plx (from `../node_modules/react-native-ble-plx`)
   - react-native-bluetooth-classic (from `../node_modules/react-native-bluetooth-classic`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - react-native-telematics-sdk (from `../node_modules/react-native-telematics`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -377,6 +382,7 @@ SPEC REPOS:
   trunk:
     - fmt
     - MultiplatformBleAdapter
+    - RaxelPulse
 
 EXTERNAL SOURCES:
   boost:
@@ -443,6 +449,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-bluetooth-classic"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-telematics-sdk:
+    :path: "../node_modules/react-native-telematics"
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
   React-RCTActionSheet:
@@ -490,6 +498,7 @@ SPEC CHECKSUMS:
   fmt: ff9d55029c625d3757ed641535fd4a75fedc7ce9
   glog: 04b94705f318337d7ead9e6d17c019bd9b1f6b1b
   MultiplatformBleAdapter: 5a6a897b006764392f9cef785e4360f54fb9477d
+  RaxelPulse: 760e77ad3679ccb16612631336e811ec3927d9d4
   RCT-Folly: 0080d0a6ebf2577475bda044aa59e2ca1f909cda
   RCTRequired: 21229f84411088e5d8538f21212de49e46cc83e2
   RCTTypeSafety: 62eed57a32924b09edaaf170a548d1fc96223086
@@ -507,6 +516,7 @@ SPEC CHECKSUMS:
   react-native-ble-plx: f10240444452dfb2d2a13a0e4f58d7783e92d76e
   react-native-bluetooth-classic: ce8a06de2c238bdb8afeeda47ab8e423dcd19044
   react-native-safe-area-context: ec0d85aca8110dae9327430a9541fec165352dab
+  react-native-telematics-sdk: 59129b731b10f6ba792b83045316dca8ede48752
   React-perflogger: e68d3795cf5d247a0379735cbac7309adf2fb931
   React-RCTActionSheet: 05452c3b281edb27850253db13ecd4c5a65bc247
   React-RCTAnimation: 578eebac706428e68466118e84aeacf3a282b4da

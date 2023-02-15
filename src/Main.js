@@ -9,19 +9,27 @@ import {
   Text,
   useColorMode,
   VStack,
-  useToast, ScrollView, Stack, View,
+  useToast, ScrollView, Stack, View, Alert,
 } from 'native-base';
 import React, { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { FlatList, SafeAreaView } from 'react-native';
-import { conectTo, isConected, read, startScanner, stopScanner } from './plugins/bt';
+import { conectTo, isConected, read, startScanner, stopScanner, writeCharacteristic } from './plugins/bt';
+import {Buffer} from 'buffer';
+
+const elm327ServiceUUID = '000018f0-0000-1000-8000-00805f9b34fb';
+const elm327NotifyCharacteristicUUID = '00002af0-0000-1000-8000-00805f9b34fb';
+const elm327WriteCharacteristicUUID = '00002af1-0000-1000-8000-00805f9b34fb';
+
+const ELM_327_STATUS_WAITING = 'WAITING';
+const ELM_327_STATUS_BATTERY_VOLTAGE_REQUEST = 'VOLT_REQ';
+
 
 export default function Main() {
   const validation = useForm({ mode: 'all' });
   const { t } = useTranslation();
   const toast = useToast();
-
   const { handleSubmit, formState } = validation;
   const [list, setList] = useState([]);
   const [servicios, setServicios] = useState([]);
@@ -29,6 +37,7 @@ export default function Main() {
   const [dev, setDev] = useState({});
   const [service, setService] = useState({});
   const [search, setSearch] = useState(false);
+  const [elm327Status, setElm327Status] = useState(ELM_327_STATUS_WAITING);
 
   const loadBts = () => {
     setSearch(true);
@@ -45,20 +54,10 @@ export default function Main() {
     }
   };
 
-  const errorBt = (a) => {
-    console.error(a)
-  }
-
   const readDevice = () => {
-    if(dev.id){
-      dev.discoverAllServicesAndCharacteristics().then(a=>{
-        console.log('all',JSON.stringify(a,null,2))
-      }).catch((e)=>{
-        console.log(e)
-      })
-    }else {
-      console.log("Error no existe device")
-    }
+    const readVoltageBytes = Buffer.from('AT RV\r').toString('base64');
+    setElm327Status(ELM_327_STATUS_BATTERY_VOLTAGE_REQUEST);
+    writeToElm327(readVoltageBytes);
   }
 
   const cancelar = () => {
@@ -66,36 +65,54 @@ export default function Main() {
     stopScanner();
   };
 
-  useEffect(()=>{
-    //
-  },[])
+  const  setupNotifications = (device) => {
+    console.log('monitor set');
+    device.monitorCharacteristicForService(
+      elm327ServiceUUID,
+      elm327NotifyCharacteristicUUID,
+      (error, characteristic) => {
+        if (error) {
+          console.error('error', error);
+          return;
+        }
+        console.log('monitor set error',error);
+        updateValue(characteristic.uuid, characteristic.value);
+      },
+    );
+  }
 
-  const pushService = (service) =>{
-    console.log('touch servicio:',service.uuid);
-    setService(service);
-    setCarasteristicas([]);
-    dev.characteristicsForService(service.uuid).then(a=>{
-      console.log('caracteristicas de ',service.uuid,a.length);
-      setCarasteristicas(a);
-    }).catch((e)=>{
-      console.log('error caracteristicas de ',service.uuid,e);
-    })
+  const updateValue = (key, value) => {
+    const readebleData = Buffer.from(value, 'base64').toString('ascii');
+    console.info('update read', key,value,readebleData);
+  }
+
+  const writeToElm327 = (bytesToWrite) => {
+    if (dev === null) {
+      console.error('Cancelado no seteado dispositivo')
+      return;
+    }
+    //this.elmDataQueue = new Queue();
+    writeCharacteristic(dev.id,elm327ServiceUUID, elm327WriteCharacteristicUUID, bytesToWrite)
   }
 
   const pushItem = (item) => {
-    console.log('touch:',item.id);
-    conectTo(item).then(a=>{
+    console.log('touch:',JSON.stringify(item,null,3));
+    item.connect().then((device1)=>{
       setDev(item);
-      setServicios([]);
-      console.log('exito en touch');
+      return device1.discoverAllServicesAndCharacteristics();
+    }).then((device2)=>{
+      return setupNotifications(device2);
+    }).then((device3)=>{
       item.services().then((a)=>{
+        console.log('servicios',a)
         setServicios(a);
-        console.log('servicios de ',item.id, a.length);
-      }).catch((b)=>{
-        console.log('error servicios de ',item.id, b);
       })
-    }).catch(e=>{
-      console.log('error en touch',e);
+      console.log('3',device3)
+    }).then(dev => {
+      console.info('success to connect', dev);
+      //workTheProcessQueue();
+    }).catch((err)=>{
+      console.error(err)
     })
   };
 
@@ -115,7 +132,7 @@ export default function Main() {
           <Button size='md' onPress={readDevice} isDisabled={!dev?.id}>{t('btns.read')}</Button>
         </Stack>
       </VStack>
-      <ScrollView nestedScrollEnabled={true}>
+      <SafeAreaView nestedScrollEnabled={true}>
         <Center mt="3" mb="4">
           <Heading fontSize="xl">Bluetooth</Heading>
         </Center>
@@ -124,9 +141,7 @@ export default function Main() {
             <Pressable onPress={() => pushItem(item)} isDisabled={search} maxW='96' shadow='3' bg={dev?.id===item.id ? 'red.200' : 'coolGray.100'} p='1'>
               <HStack space={[2, 3]} justifyContent='space-between'>
                 <VStack>
-                  <Text _dark={{
-                    color: 'warmGray.50',
-                  }} color='coolGray.800' bold>
+                  <Text color={item.id!=='5FE195BD-D95E-2DBC-9767-65F99FDD8262' ? 'green.500' : 'red.500'} bold>
                     {item.id}
                   </Text>
                   <Text color='coolGray.600' _dark={{
@@ -144,7 +159,7 @@ export default function Main() {
         </Center>
         <FlatList data={servicios} renderItem={({ item }) =>
           <Box pl={['1', '1']} pr={['0', '5']} py='2'>
-            <Pressable onPress={() => pushService(item)} isDisabled={search} maxW='96' shadow='3' bg={service?.uuid===item.uuid ? 'red.200' : 'coolGray.100'} p='1'>
+            <Pressable onPress={() => (1)} isDisabled={search} maxW='96' shadow='3' bg={elm327ServiceUUID===item.uuid ? 'red.200' : 'coolGray.100'} p='1'>
               <HStack space={[2, 3]} justifyContent='space-between'>
                 <VStack>
                   <Text _dark={{
@@ -152,9 +167,7 @@ export default function Main() {
                   }} color='coolGray.800' bold>
                     {item.id}
                   </Text>
-                  <Text color='coolGray.600' _dark={{
-                    color: 'warmGray.200',
-                  }}>
+                  <Text color={item.uuid!==elm327ServiceUUID ? 'coolGray.600' : 'red.500'}>
                     {item.uuid}
                   </Text>
                 </VStack>
@@ -162,31 +175,7 @@ export default function Main() {
             </Pressable>
           </Box>
         } keyExtractor={(item) => item.uuid} />
-        <Center mt="3" mb="4">
-          <Heading fontSize="xl">Characteristics</Heading>
-        </Center>
-        <FlatList data={caracteristicas} renderItem={({ item }) =>
-          <Box pl={['1', '1']} pr={['0', '5']} py='2'>
-            <Pressable onPress={null} isDisabled={search} maxW='96' shadow='3' bg='coolGray.100' p='1'>
-              <HStack space={[2, 3]} justifyContent='space-between'>
-                <VStack>
-                  <Text _dark={{
-                    color: 'warmGray.50',
-                  }} color='coolGray.800' bold>
-                    {item.id}
-                  </Text>
-                  <Text color='coolGray.600' _dark={{
-                    color: 'warmGray.200',
-                  }}>
-                    {item.uuid}
-                  </Text>
-                </VStack>
-              </HStack>
-            </Pressable>
-          </Box>
-        } keyExtractor={(item) => item.id} />
-      </ScrollView>
-      <Box py={20}></Box>
+      </SafeAreaView>
     </SafeAreaView>
   );
 }
